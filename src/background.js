@@ -11,3 +11,15 @@ chrome.storage.onChanged.addListener((changes) => {
   if (changes.run) badge(changes.run.newValue);
 });
 chrome.storage.local.get("run").then(({ run }) => badge(run && run.active ? run : null));
+
+// Alt+Shift+U starts or stops a run on the TikTok tab you are looking at.
+chrome.commands.onCommand.addListener(async (command) => {
+  if (command !== "toggle-run") return;
+  const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+  if (!tab) return;
+  try {
+    await chrome.tabs.sendMessage(tab.id, { type: "fh-toggle" });
+  } catch {
+    // not a TikTok tab
+  }
+});

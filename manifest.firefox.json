@@ -52,5 +52,13 @@
     "scripts": [
       "background.js"
     ]
+  },
+  "commands": {
+    "toggle-run": {
+      "suggested_key": {
+        "default": "Alt+Shift+U"
+      },
+      "description": "Start or stop clearing on the current TikTok tab"
+    }
   }
 }

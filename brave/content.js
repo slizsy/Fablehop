@@ -509,6 +509,10 @@
     } else if (msg.type === "fh-stop") {
       stopFlag = true;
       reply({ ok: true });
+    } else if (msg.type === "fh-toggle") {
+      if (run && run.active) stopFlag = true;
+      else chrome.storage.local.get("opts").then(({ opts }) => start(opts));
+      reply({ ok: true });
     } else if (msg.type === "fh-ping") {
       reply({ ok: true, active: !!(run && run.active) });
     }
