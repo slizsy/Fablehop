@@ -4,7 +4,8 @@
   window.__fhUnrepost = true;
 
   const SPEEDS = { fast: 700, normal: 1400, slow: 2800 };
-  const MAX_PASSES = 40;
+  const MAX_PASSES = 200;
+  const EMPTY_RETRIES = 3; // reloads to try when the grid looks empty
   const RESUME_WINDOW = 90 * 1000; // only pick a run back up if it was alive this recently
 
   const STOP = Symbol("stop");
@@ -170,10 +171,15 @@
     }
 
     status("Looking for reposts");
-    const item = await waitFor(findRepostItem, 9000);
+    let item = await waitFor(findRepostItem, 8000);
     if (!item) {
-      return finish("done", run.removed ? "All clear. No reposts left." : "No reposts found. Nothing to remove.");
+      // TikTok sometimes shows an empty grid until you scroll
+      window.scrollTo(0, document.documentElement.scrollHeight);
+      item = await waitFor(findRepostItem, 4000);
+      window.scrollTo(0, 0);
     }
+    if (!item) return emptyPass(false);
+    run.empty = 0;
     item.click();
     await pause(1200);
 
@@ -216,22 +222,34 @@
     const close = findClose();
     if (close) close.click();
 
-    if (passRemoved === 0) {
-      return finish(
-        passSkipped ? "error" : "done",
-        passSkipped
-          ? "Couldn't find the repost button. TikTok may have changed its layout."
-          : "All clear. No reposts left."
-      );
-    }
+    if (passRemoved === 0) return emptyPass(passSkipped > 0);
     if (run.pass >= MAX_PASSES) return finish("done", "Stopped after " + MAX_PASSES + " passes. Press start to keep going.");
 
+    run.empty = 0;
     run.pass++;
     status("Reloading to check for more");
     await save();
     await pause(1500);
     await save();
     location.reload();
+  }
+
+  // TikTok often stops showing reposts while more are left, so an empty
+  // grid has to come up several reloads in a row before we believe it.
+  async function emptyPass(stuck) {
+    run.empty = (run.empty || 0) + 1;
+    if (run.empty <= EMPTY_RETRIES) {
+      status("Nothing showing. Reloading to look again (" + run.empty + "/" + EMPTY_RETRIES + ")");
+      log("empty, looking again");
+      await save();
+      await pause(3500);
+      await save();
+      location.reload();
+      return;
+    }
+    run.empty = 0;
+    if (stuck) return finish("error", "Couldn't find the repost button. TikTok may have changed its layout.");
+    return finish("done", run.removed ? "All clear. No reposts left." : "No reposts found. Nothing to remove.");
   }
 
   function start(o) {
