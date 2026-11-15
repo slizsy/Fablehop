@@ -120,7 +120,7 @@
       first(T.items) ||
       // last resort: any video tile that is not one of your own posts
       [...document.querySelectorAll('[class*="DivVideoContainer"]')].find(
-        (el) => visible(el) && !el.closest('[data-e2e="user-post-item-list"]')
+        (el) => visible(el) && (T === TARGETS.reposts || !el.closest('[data-e2e="user-post-item-list"]'))
       ) ||
       null
     );
@@ -230,7 +230,6 @@
       window.scrollTo(0, 0);
     }
     if (!item) return emptyPass(false);
-    run.empty = 0;
     item.click();
     await pause(1200);
 
@@ -251,6 +250,7 @@
         btn.click();
         run.removed++;
         run.counts[run.target] = (run.counts[run.target] || 0) + 1;
+        run.empty = 0;
         passRemoved++;
         bumpTotal();
         log(T.verb + "  " + String(id).slice(-10));
