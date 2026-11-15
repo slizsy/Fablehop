@@ -47,5 +47,10 @@
         ]
       }
     }
+  },
+  "background": {
+    "scripts": [
+      "background.js"
+    ]
   }
 }
