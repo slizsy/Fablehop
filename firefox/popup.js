@@ -98,17 +98,17 @@ $("views").addEventListener("click", (e) => {
 
 /* ---------- log ---------- */
 
-let history = [];
+let cleared = [];
 
 function paintLog() {
   const list = $("log-list");
-  $("log-count").textContent = history.length ? history.length + " cleared" : "Nothing cleared yet";
+  $("log-count").textContent = cleared.length ? cleared.length + " cleared" : "Nothing cleared yet";
   list.replaceChildren();
-  if (!history.length) {
+  if (!cleared.length) {
     list.innerHTML = '<div class="none">Cleared videos show up here.</div>';
     return;
   }
-  history.slice(-200).reverse().forEach((e) => {
+  cleared.slice(-200).reverse().forEach((e) => {
     const a = document.createElement("a");
     a.href = e.url;
     a.target = "_blank";
@@ -122,7 +122,7 @@ function paintLog() {
   });
 }
 
-const logText = () => history.map((e) => e.url).join("\n");
+const logText = () => cleared.map((e) => e.url).join("\n");
 
 $("log-copy").addEventListener("click", async (e) => {
   await navigator.clipboard.writeText(logText());
@@ -136,14 +136,14 @@ $("log-save").addEventListener("click", () => {
   a.click();
 });
 $("log-clear").addEventListener("click", () => {
-  history = [];
-  chrome.storage.local.set({ history });
+  cleared = [];
+  chrome.storage.local.set({ cleared });
   paintLog();
 });
 
 chrome.storage.onChanged.addListener((changes) => {
   if (changes.history) {
-    history = changes.history.newValue || [];
+    cleared = changes.history.newValue || [];
     paintLog();
   }
   if (changes.run) run = changes.run.newValue;
@@ -161,7 +161,7 @@ chrome.storage.onChanged.addListener((changes) => {
     } catch {}
   }
   const s = await chrome.storage.local.get(["run", "total", "opts", "history"]);
-  history = s.history || [];
+  cleared = s.history || [];
   paintLog();
   run = s.run || null;
   opts = { ...DEFAULTS, ...s.opts };
