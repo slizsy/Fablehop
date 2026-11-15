@@ -1,7 +1,7 @@
 const $ = (id) => document.getElementById(id);
 const go = $("go");
 
-const DEFAULTS = { speed: "normal", targets: ["reposts"], limit: 0, mode: "remove" };
+const DEFAULTS = { speed: "normal", targets: ["reposts"], limit: 0, mode: "remove", keep: "" };
 let opts = { ...DEFAULTS };
 let tab = null;
 let onTikTok = false;

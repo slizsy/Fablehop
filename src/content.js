@@ -134,6 +134,9 @@
   const findNext = () => first(['[data-e2e="arrow-right"]', 'button[aria-label="Go to next video"]']);
   const findClose = () => first(['[data-e2e="browse-close"]', 'button[aria-label="Close"]']);
 
+  // the viewer's address looks like /@creator/video/123
+  const creator = () => ((location.pathname.match(/^\/@([^/]+)/) || [])[1] || "").toLowerCase();
+
   const videoId = () => {
     const m = location.pathname.match(/\/(?:video|photo)\/(\d+)/);
     return m ? m[1] : location.href;
@@ -235,7 +238,9 @@
 
     const delay = SPEEDS[run.speed] || SPEEDS.normal;
     const dry = run.opts.mode === "count"; // count only: walk the videos but click nothing
+    const keep = new Set((run.opts.keep || "").toLowerCase().split(/[\s,]+/).map((s) => s.replace(/^@/, "")).filter(Boolean));
     const seen = new Set();
+    let passKept = 0;
     let passRemoved = 0;
     let passSkipped = 0;
 
@@ -247,7 +252,11 @@
 
       const btn = await waitFor(() => findBtn(T), 6000);
       // aria-pressed="false" would mean it is already off, and a click would turn it back on
-      if (btn && btn.getAttribute("aria-pressed") !== "false") {
+      if (keep.has(creator())) {
+        run.kept = (run.kept || 0) + 1;
+        passKept++;
+        log("kept  @" + creator());
+      } else if (btn && btn.getAttribute("aria-pressed") !== "false") {
         if (!dry) btn.click();
         run.removed++;
         run.counts[run.target] = (run.counts[run.target] || 0) + 1;
@@ -281,6 +290,7 @@
     if (close) close.click();
 
     if (dry) return nextTarget();
+    if (passRemoved === 0 && passKept && !passSkipped) return nextTarget(); // only keepers left
     if (passRemoved === 0) return emptyPass(passSkipped > 0);
     if (run.pass >= MAX_PASSES) return finish("done", "Stopped after " + MAX_PASSES + " passes. Press start to keep going.");
 
@@ -326,7 +336,8 @@
     }
     const parts = run.targets.filter((t) => run.counts[t]).map((t) => run.counts[t] + " " + TARGETS[t].label);
     if (parts.length && run.opts.mode === "count") return finish("done", "Counted " + parts.join(", ") + ". Nothing was changed.");
-    if (parts.length) return finish("done", "All clear. Cleared " + parts.join(", ") + ".");
+    if (parts.length) return finish("done", "All clear. Cleared " + parts.join(", ") + "." + (run.kept ? " Kept the ones on your keep list." : ""));
+    if (run.kept) return finish("done", "Nothing to clear. Only videos from your keep list are left.");
     if (run.stuck) return finish("error", "Found videos but not the button to clear them. TikTok may have changed its layout.");
     return finish("done", "Nothing found to clear.");
   }
