@@ -158,7 +158,7 @@ $("log-save").addEventListener("click", () => {
 });
 $("log-clear").addEventListener("click", () => {
   cleared = [];
-  chrome.storage.local.set({ cleared });
+  chrome.storage.local.set({ history: cleared });
   paintLog();
 });
 
