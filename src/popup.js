@@ -72,6 +72,12 @@ chrome.storage.onChanged.addListener((changes) => {
 (async () => {
   [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
   onTikTok = !!(tab && tab.url && tab.url.startsWith("https://www.tiktok.com/"));
+  if (!onTikTok && tab) {
+    // the browser may hide the tab's address from us: ask the page directly instead
+    try {
+      onTikTok = !!(await chrome.tabs.sendMessage(tab.id, { type: "fh-ping" })).ok;
+    } catch {}
+  }
   const s = await chrome.storage.local.get(["run", "total", "speed"]);
   run = s.run || null;
   speed = s.speed || "normal";

@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Fablehop Unrepost",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Removes all of your TikTok reposts, one by one, while you watch the counter go up.",
   "icons": {
     "16": "icons/icon16.png",
@@ -19,7 +19,8 @@
   },
   "permissions": [
     "storage",
-    "scripting"
+    "scripting",
+    "activeTab"
   ],
   "host_permissions": [
     "https://www.tiktok.com/*"
