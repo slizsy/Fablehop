@@ -160,6 +160,33 @@ h1 em { color: var(--accent); font-style: normal; margin-left: -10px; }
 .btn.ghost:hover { border-color: var(--text); background: none; color: var(--text); }
 .btn:focus-visible, .tag:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
+.log-list {
+  height: 262px;
+  margin: 12px 0;
+  overflow-y: auto;
+  border: 1px solid var(--border);
+  background: var(--panel);
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+.log-list a {
+  display: flex;
+  gap: 10px;
+  padding: 7px 10px;
+  border-bottom: 1px solid var(--border);
+  color: var(--text);
+  text-decoration: none;
+  font-size: 11px;
+  white-space: nowrap;
+}
+.log-list a:hover { background: var(--panel-2); }
+.log-list .k { color: var(--accent); width: 58px; flex: none; font-size: 9px; letter-spacing: .12em; text-transform: uppercase; line-height: 17px; }
+.log-list .w { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+.log-list .t { color: var(--sub); }
+.log-list .none { padding: 14px 10px; color: var(--sub); }
+.row { display: flex; gap: 8px; }
+.btn.small { height: 34px; margin-top: 0; font-size: 10px; letter-spacing: .12em; }
+
 .status { min-height: 18px; margin: 10px 0 0; color: var(--sub); }
 body.error .status { color: var(--error); }
 

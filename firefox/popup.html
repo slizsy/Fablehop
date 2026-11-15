@@ -16,6 +16,7 @@
   <nav class="views" id="views">
     <button data-view="run" class="on"><span>01</span>Run</button>
     <button data-view="options"><span>02</span>Options</button>
+    <button data-view="log"><span>03</span>Log</button>
   </nav>
 
 <main>
@@ -77,6 +78,17 @@
       <textarea class="input" spellcheck="false" placeholder="@creator1 @creator2" data-opt="keep"></textarea>
       <p class="hint">Videos from these creators are left alone.</p>
     </div>
+  </section>
+
+  <section id="v-log" hidden>
+    <div class="label"><span class="sq"></span><span id="log-count">Nothing cleared yet</span></div>
+    <div class="log-list" id="log-list"></div>
+    <div class="row">
+      <button class="btn ghost small" id="log-copy">Copy links</button>
+      <button class="btn ghost small" id="log-save">Save .txt</button>
+      <button class="btn ghost small" id="log-clear">Clear</button>
+    </div>
+    <p class="hint">Every video the extension cleared, newest first. Click one to open it.</p>
   </section>
 </main>
 

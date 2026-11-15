@@ -28,6 +28,15 @@
     await chrome.storage.local.set({ total: total + 1 });
   };
 
+  // Every cleared video is written down so you can find it again later.
+  let chain = Promise.resolve();
+  const remember = (entry) =>
+    (chain = chain.then(async () => {
+      const { history = [] } = await chrome.storage.local.get("history");
+      history.push(entry);
+      await chrome.storage.local.set({ history: history.slice(-1000) });
+    }));
+
   /* ---------- finding things on the page ---------- */
 
   const q = (sel, root = document) => root.querySelector(sel);
@@ -263,6 +272,7 @@
         run.empty = 0;
         passRemoved++;
         if (!dry) bumpTotal();
+        if (!dry) remember({ kind: run.target, url: location.origin + location.pathname, t: Date.now() });
         log((dry ? "found" : T.verb) + "  " + String(id).slice(-10));
       } else {
         run.skipped++;

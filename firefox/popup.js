@@ -96,7 +96,56 @@ $("views").addEventListener("click", (e) => {
   document.querySelectorAll("main section").forEach((s) => (s.hidden = s.id !== "v-" + b.dataset.view));
 });
 
+/* ---------- log ---------- */
+
+let history = [];
+
+function paintLog() {
+  const list = $("log-list");
+  $("log-count").textContent = history.length ? history.length + " cleared" : "Nothing cleared yet";
+  list.replaceChildren();
+  if (!history.length) {
+    list.innerHTML = '<div class="none">Cleared videos show up here.</div>';
+    return;
+  }
+  history.slice(-200).reverse().forEach((e) => {
+    const a = document.createElement("a");
+    a.href = e.url;
+    a.target = "_blank";
+    a.rel = "noopener";
+    const who = (e.url.match(/@[^/]+/) || ["video"])[0];
+    const when = new Date(e.t).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" });
+    for (const [cls, text] of [["k", e.kind], ["w", who], ["t", when]]) {
+      a.appendChild(Object.assign(document.createElement("span"), { className: cls, textContent: text }));
+    }
+    list.appendChild(a);
+  });
+}
+
+const logText = () => history.map((e) => e.url).join("\n");
+
+$("log-copy").addEventListener("click", async (e) => {
+  await navigator.clipboard.writeText(logText());
+  e.target.textContent = "Copied";
+  setTimeout(() => (e.target.textContent = "Copy links"), 1200);
+});
+$("log-save").addEventListener("click", () => {
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([logText() + "\n"], { type: "text/plain" }));
+  a.download = "fablehop-unrepost-log.txt";
+  a.click();
+});
+$("log-clear").addEventListener("click", () => {
+  history = [];
+  chrome.storage.local.set({ history });
+  paintLog();
+});
+
 chrome.storage.onChanged.addListener((changes) => {
+  if (changes.history) {
+    history = changes.history.newValue || [];
+    paintLog();
+  }
   if (changes.run) run = changes.run.newValue;
   if (changes.total) $("total").textContent = changes.total.newValue;
   paint();
@@ -111,7 +160,9 @@ chrome.storage.onChanged.addListener((changes) => {
       onTikTok = !!(await chrome.tabs.sendMessage(tab.id, { type: "fh-ping" })).ok;
     } catch {}
   }
-  const s = await chrome.storage.local.get(["run", "total", "opts"]);
+  const s = await chrome.storage.local.get(["run", "total", "opts", "history"]);
+  history = s.history || [];
+  paintLog();
   run = s.run || null;
   opts = { ...DEFAULTS, ...s.opts };
   $("total").textContent = s.total || 0;
