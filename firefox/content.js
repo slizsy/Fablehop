@@ -259,6 +259,11 @@
         passSkipped++;
         log("skipped  " + String(id).slice(-10));
       }
+      if (run.opts.limit && run.removed >= run.opts.limit) {
+        const x = findClose();
+        if (x) x.click();
+        return finish("done", "Stopped at your limit of " + run.opts.limit + ".");
+      }
       await save();
       render();
       await pause(jitter(delay));
