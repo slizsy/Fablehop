@@ -1,4 +1,4 @@
-// Fablehop Unrepost: walks your Reposts tab and un-reposts each video.
+// Fablehop Unrepost: walks your Reposts, Liked and Favorites tabs and clears each video.
 (() => {
   if (window.__fhUnrepost) return;
   window.__fhUnrepost = true;
@@ -56,33 +56,80 @@
 
   const samePath = (a, b) => decodeURIComponent(a).replace(/\/$/, "").toLowerCase() === decodeURIComponent(b).replace(/\/$/, "").toLowerCase();
 
-  function findRepostTab() {
+  // What can be cleared. Each one is a tab on your profile, the grid inside it,
+  // and the button in the video viewer that undoes it.
+  const TARGETS = {
+    reposts: {
+      label: "reposts",
+      verb: "removed",
+      tab: ['[data-e2e="repost-tab"]', '[class*="PRepost"]'],
+      tabText: /^reposts?$/i,
+      items: [
+        '[data-e2e="user-repost-item"] a[href]',
+        '[data-e2e="user-repost-item"]',
+        '[data-e2e="user-repost-item-list"] a[href*="/video/"]',
+        '[data-e2e="user-repost-item-list"] a[href*="/photo/"]',
+      ],
+      btn: [
+        '[data-e2e="video-share-repost"]',
+        '[data-e2e="browse-repost"]',
+        '[data-e2e*="repost"]:is(button, [role="button"])',
+        'button[aria-label*="epost"]',
+      ],
+    },
+    likes: {
+      label: "likes",
+      verb: "unliked",
+      tab: ['[data-e2e="liked-tab"]', '[class*="PLike"]'],
+      tabText: /^liked$/i,
+      items: [
+        '[data-e2e="user-liked-item"] a[href]',
+        '[data-e2e="user-liked-item"]',
+        '[data-e2e="user-liked-item-list"] a[href*="/video/"]',
+        '[data-e2e="user-liked-item-list"] a[href*="/photo/"]',
+      ],
+      btn: ['[data-e2e="browse-like-icon"]', '[data-e2e="like-icon"]'],
+    },
+    favorites: {
+      label: "favorites",
+      verb: "unsaved",
+      tab: ['[data-e2e="favorites-tab"]', '[class*="PFavorite"]'],
+      tabText: /^favorites$/i,
+      items: [
+        '[data-e2e="favorites-item"] a[href]',
+        '[data-e2e="favorites-item"]',
+        '[data-e2e="favorites-item-list"] a[href*="/video/"]',
+        '[data-e2e="favorites-item-list"] a[href*="/photo/"]',
+      ],
+      btn: ['[data-e2e="browse-favorite-icon"]', '[data-e2e="undefined-icon"]', '[data-e2e="favorite-icon"]'],
+    },
+  };
+
+  function findTab(T) {
     return (
-      first(['[data-e2e="repost-tab"]', '[class*="PRepost"]']) ||
+      first(T.tab) ||
       [...document.querySelectorAll('[role="tab"], [class*="Tab"] p, [class*="Tab"] span')].find(
-        (el) => visible(el) && /^reposts?$/i.test(el.textContent.trim())
+        (el) => visible(el) && T.tabText.test(el.textContent.trim())
       ) ||
       null
     );
   }
 
-  function findRepostItem() {
-    return first([
-      '[data-e2e="user-repost-item"] a[href]',
-      '[data-e2e="user-repost-item"]',
-      '[data-e2e="user-repost-item-list"] a[href*="/video/"]',
-      '[data-e2e="user-repost-item-list"] a[href*="/photo/"]',
-      '[class*="DivVideoContainer"]',
-    ]);
+  function findItem(T) {
+    return (
+      first(T.items) ||
+      // last resort: any video tile that is not one of your own posts
+      [...document.querySelectorAll('[class*="DivVideoContainer"]')].find(
+        (el) => visible(el) && !el.closest('[data-e2e="user-post-item-list"]')
+      ) ||
+      null
+    );
   }
 
-  const findRepostBtn = () =>
-    first([
-      '[data-e2e="video-share-repost"]',
-      '[data-e2e="browse-repost"]',
-      '[data-e2e*="repost"]:is(button, [role="button"])',
-      'button[aria-label*="epost"]',
-    ]);
+  function findBtn(T) {
+    const el = first(T.btn);
+    return el ? el.closest('button, [role="button"]') || el : null;
+  }
 
   const findNext = () => first(['[data-e2e="arrow-right"]', 'button[aria-label="Go to next video"]']);
   const findClose = () => first(['[data-e2e="browse-close"]', 'button[aria-label="Close"]']);
@@ -160,9 +207,13 @@
       return finish("error", "Couldn't find your profile. Log in to TikTok, open your own profile, then press start.");
     }
 
-    status("Opening the Reposts tab");
-    const tab = await waitFor(findRepostTab, 12000);
-    if (!tab) return finish("error", "No Reposts tab on this profile.");
+    const T = TARGETS[run.target];
+    status("Opening your " + T.label);
+    const tab = await waitFor(() => findTab(T), 12000);
+    if (!tab) {
+      log("no " + T.label + " tab here");
+      return nextTarget();
+    }
     tab.click();
     await pause(1800);
     if (tab.hasAttribute("aria-selected") && tab.getAttribute("aria-selected") !== "true") {
@@ -170,12 +221,12 @@
       await pause(1500);
     }
 
-    status("Looking for reposts");
-    let item = await waitFor(findRepostItem, 8000);
+    status("Looking for " + T.label);
+    let item = await waitFor(() => findItem(T), 8000);
     if (!item) {
       // TikTok sometimes shows an empty grid until you scroll
       window.scrollTo(0, document.documentElement.scrollHeight);
-      item = await waitFor(findRepostItem, 4000);
+      item = await waitFor(() => findItem(T), 4000);
       window.scrollTo(0, 0);
     }
     if (!item) return emptyPass(false);
@@ -188,20 +239,21 @@
     let passRemoved = 0;
     let passSkipped = 0;
 
-    status("Removing reposts");
+    status("Clearing " + T.label);
     while (true) {
       const id = videoId();
       if (seen.has(id)) break;
       seen.add(id);
 
-      const btn = await waitFor(findRepostBtn, 6000);
-      // aria-pressed="false" would mean it is not reposted, and a click would repost it
+      const btn = await waitFor(() => findBtn(T), 6000);
+      // aria-pressed="false" would mean it is already off, and a click would turn it back on
       if (btn && btn.getAttribute("aria-pressed") !== "false") {
         btn.click();
         run.removed++;
+        run.counts[run.target] = (run.counts[run.target] || 0) + 1;
         passRemoved++;
         bumpTotal();
-        log("removed  " + String(id).slice(-10));
+        log(T.verb + "  " + String(id).slice(-10));
       } else {
         run.skipped++;
         passSkipped++;
@@ -247,14 +299,35 @@
       location.reload();
       return;
     }
+    if (stuck) {
+      run.stuck = true;
+      log("no button found for " + run.target);
+    }
+    return nextTarget();
+  }
+
+  // Move on to the next thing to clear, or wrap up.
+  async function nextTarget() {
     run.empty = 0;
-    if (stuck) return finish("error", "Couldn't find the repost button. TikTok may have changed its layout.");
-    return finish("done", run.removed ? "All clear. No reposts left." : "No reposts found. Nothing to remove.");
+    const i = run.targets.indexOf(run.target);
+    if (i > -1 && i < run.targets.length - 1) {
+      run.target = run.targets[i + 1];
+      run.pass = 1;
+      log("next up: " + run.target);
+      await save();
+      return work();
+    }
+    const parts = run.targets.filter((t) => run.counts[t]).map((t) => run.counts[t] + " " + TARGETS[t].label);
+    if (parts.length) return finish("done", "All clear. Cleared " + parts.join(", ") + ".");
+    if (run.stuck) return finish("error", "Found videos but not the button to clear them. TikTok may have changed its layout.");
+    return finish("done", "Nothing found to clear.");
   }
 
   function start(o) {
-    const opts = Object.assign({ speed: "normal" }, o);
-    run = { active: true, state: "running", removed: 0, skipped: 0, pass: 1, speed: opts.speed, opts, status: "Starting", ts: Date.now() };
+    const opts = Object.assign({ speed: "normal", targets: ["reposts"] }, o);
+    const targets = Object.keys(TARGETS).filter((t) => opts.targets.includes(t));
+    if (!targets.length) targets.push("reposts");
+    run = { active: true, state: "running", removed: 0, skipped: 0, pass: 1, speed: opts.speed, opts, targets, target: targets[0], counts: {}, status: "Starting", ts: Date.now() };
     lines.length = 0;
     save();
     render();
@@ -310,7 +383,7 @@
     .num.tick { animation: tick .22s ease-out; }
     @keyframes tick { from { color: var(--accent); transform: translateY(-3px); } }
     .stats { display: flex; }
-    .stat { flex: 1; padding: 6px 10px; border: 1px solid var(--border); margin-left: -1px; }
+    .stat { flex: 1; min-width: 0; padding: 6px 10px; border: 1px solid var(--border); margin-left: -1px; }
     .stat:first-child { margin-left: 0; }
     .stat .l { font-size: 9px; letter-spacing: .14em; text-transform: uppercase; color: var(--sub); }
     .stat .v { font-size: 13px; font-weight: 700; text-transform: uppercase; font-variant-numeric: tabular-nums; }
@@ -352,9 +425,9 @@
           <div class="label"><span class="sq"></span><span class="state"></span></div>
           <div class="num"></div>
           <div class="stats">
+            <div class="stat"><div class="l">Clearing</div><div class="v now"></div></div>
             <div class="stat"><div class="l">Pass</div><div class="v pass"></div></div>
             <div class="stat"><div class="l">Skipped</div><div class="v skipped"></div></div>
-            <div class="stat"><div class="l">Speed</div><div class="v speed"></div></div>
           </div>
           <div class="status"></div>
           <div class="log"></div>
@@ -362,7 +435,7 @@
         </div>
       </div>`;
     const $ = (s) => root.querySelector(s);
-    ui = { p: $(".p"), state: $(".state"), num: $(".num"), pass: $(".pass"), skipped: $(".skipped"), speed: $(".speed"), status: $(".status"), log: $(".log"), act: $(".act"), last: -1 };
+    ui = { p: $(".p"), state: $(".state"), num: $(".num"), pass: $(".pass"), skipped: $(".skipped"), now: $(".now"), status: $(".status"), log: $(".log"), act: $(".act"), last: -1 };
     $(".x").addEventListener("click", () => host.remove());
     ui.act.addEventListener("click", () => {
       if (run.active) stopFlag = true;
@@ -371,7 +444,7 @@
     document.documentElement.appendChild(host);
   }
 
-  const LABELS = { running: "Removed so far", done: "Done / removed", stopped: "Stopped / removed", error: "Stuck / removed" };
+  const LABELS = { running: "Cleared so far", done: "Done / cleared", stopped: "Stopped / cleared", error: "Stuck / cleared" };
 
   function render() {
     if (!run) return;
@@ -390,7 +463,7 @@
     ui.last = run.removed;
     ui.pass.textContent = String(run.pass).padStart(2, "0");
     ui.skipped.textContent = String(run.skipped).padStart(2, "0");
-    ui.speed.textContent = run.speed;
+    ui.now.textContent = run.target;
     ui.status.textContent = run.status + (run.active ? "…" : "");
     ui.log.replaceChildren(...lines.map((t) => Object.assign(document.createElement("div"), { textContent: t })));
     ui.act.textContent = run.active ? "Stop" : state === "done" ? "Run again" : "Start again";
@@ -417,6 +490,9 @@
     if (saved && saved.active && Date.now() - saved.ts < RESUME_WINDOW) {
       run = saved;
       run.opts = run.opts || { speed: run.speed };
+      run.targets = run.targets || ["reposts"];
+      run.target = run.target || run.targets[0];
+      run.counts = run.counts || {};
       log("pass " + String(run.pass).padStart(2, "0"));
       main();
     } else if (saved && saved.active) {

@@ -1,7 +1,7 @@
 const $ = (id) => document.getElementById(id);
 const go = $("go");
 
-const DEFAULTS = { speed: "normal" };
+const DEFAULTS = { speed: "normal", targets: ["reposts"] };
 let opts = { ...DEFAULTS };
 let tab = null;
 let onTikTok = false;
@@ -25,8 +25,10 @@ function paint() {
   $("status").textContent = run && run.status ? run.status + (active ? "…" : "") : onTikTok ? "" : "Open TikTok first, then come back here.";
 
   document.querySelectorAll(".tags[data-opt]").forEach((group) => {
-    group.querySelectorAll(".tag").forEach((t) => t.classList.toggle("on", t.dataset.val === String(opts[group.dataset.opt])));
+    const v = opts[group.dataset.opt];
+    group.querySelectorAll(".tag").forEach((t) => t.classList.toggle("on", Array.isArray(v) ? v.includes(t.dataset.val) : t.dataset.val === String(v)));
   });
+  $("what").textContent = opts.targets.join(", ").replace(/, ([^,]*)$/, " and $1");
 
   go.textContent = !onTikTok ? "Open TikTok ↗" : active ? "Stop" : "Start";
   go.classList.toggle("ghost", active);
@@ -40,7 +42,12 @@ function bindOptions() {
       el.addEventListener("click", (e) => {
         const t = e.target.closest(".tag");
         if (!t) return;
-        opts[key] = t.dataset.val;
+        if (el.hasAttribute("data-multi")) {
+          const on = opts[key].includes(t.dataset.val);
+          const next = [...el.querySelectorAll(".tag")].map((x) => x.dataset.val).filter((v) => (v === t.dataset.val ? !on : opts[key].includes(v)));
+          if (!next.length) return; // keep at least one picked
+          opts[key] = next;
+        } else opts[key] = t.dataset.val;
         saveOpts();
         paint();
       });
