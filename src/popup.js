@@ -1,15 +1,19 @@
 const $ = (id) => document.getElementById(id);
 const go = $("go");
 
-$("logo").innerHTML = fhLogo.svg("fablehop", 20);
-$("glyph").innerHTML = fhLogo.svg("unrepost", 30);
-
+const DEFAULTS = { speed: "normal" };
+let opts = { ...DEFAULTS };
 let tab = null;
 let onTikTok = false;
 let run = null;
-let speed = "normal";
 
 const STATES = { running: "Running", done: "Done", stopped: "Stopped", error: "Stuck" };
+const saveOpts = () => chrome.storage.local.set({ opts });
+
+function logos() {
+  $("logo").innerHTML = fhLogo.svg("fablehop", 20);
+  $("glyph").innerHTML = fhLogo.svg("unrepost", 30);
+}
 
 function paint() {
   const active = !!(run && run.active);
@@ -20,15 +24,34 @@ function paint() {
   $("pass").textContent = run ? String(run.pass).padStart(2, "0") : "--";
   $("status").textContent = run && run.status ? run.status + (active ? "…" : "") : onTikTok ? "" : "Open TikTok first, then come back here.";
 
-  document.querySelectorAll(".tag").forEach((t) => {
-    const on = t.dataset.speed === speed;
-    t.classList.toggle("on", on);
-    t.setAttribute("aria-checked", on);
-    t.disabled = active;
+  document.querySelectorAll(".tags[data-opt]").forEach((group) => {
+    group.querySelectorAll(".tag").forEach((t) => t.classList.toggle("on", t.dataset.val === String(opts[group.dataset.opt])));
   });
 
   go.textContent = !onTikTok ? "Open TikTok ↗" : active ? "Stop" : "Start";
   go.classList.toggle("ghost", active);
+}
+
+// Anything in the Options view with data-opt="name" reads and writes opts.name.
+function bindOptions() {
+  document.querySelectorAll("[data-opt]").forEach((el) => {
+    const key = el.dataset.opt;
+    if (el.classList.contains("tags")) {
+      el.addEventListener("click", (e) => {
+        const t = e.target.closest(".tag");
+        if (!t) return;
+        opts[key] = t.dataset.val;
+        saveOpts();
+        paint();
+      });
+    } else {
+      el.value = opts[key] || "";
+      el.addEventListener("input", () => {
+        opts[key] = el.type === "number" ? Math.max(0, parseInt(el.value, 10) || 0) : el.value;
+        saveOpts();
+      });
+    }
+  });
 }
 
 async function send(msg) {
@@ -41,6 +64,11 @@ async function send(msg) {
   }
 }
 
+function fail() {
+  $("status").textContent = "Couldn't reach the page. Reload TikTok and try again.";
+  document.body.className = "error";
+}
+
 go.addEventListener("click", async () => {
   if (!onTikTok) {
     chrome.tabs.create({ url: "https://www.tiktok.com/" });
@@ -48,19 +76,17 @@ go.addEventListener("click", async () => {
   }
   try {
     if (run && run.active) await send({ type: "fh-stop" });
-    else await send({ type: "fh-start", speed });
-  } catch (e) {
-    $("status").textContent = "Couldn't reach the page. Reload TikTok and try again.";
-    document.body.className = "error";
+    else await send({ type: "fh-start", opts });
+  } catch {
+    fail();
   }
 });
 
-$("speeds").addEventListener("click", (e) => {
-  const t = e.target.closest(".tag");
-  if (!t) return;
-  speed = t.dataset.speed;
-  chrome.storage.local.set({ speed });
-  paint();
+$("views").addEventListener("click", (e) => {
+  const b = e.target.closest("button");
+  if (!b) return;
+  document.querySelectorAll("#views button").forEach((x) => x.classList.toggle("on", x === b));
+  document.querySelectorAll("main section").forEach((s) => (s.hidden = s.id !== "v-" + b.dataset.view));
 });
 
 chrome.storage.onChanged.addListener((changes) => {
@@ -78,9 +104,11 @@ chrome.storage.onChanged.addListener((changes) => {
       onTikTok = !!(await chrome.tabs.sendMessage(tab.id, { type: "fh-ping" })).ok;
     } catch {}
   }
-  const s = await chrome.storage.local.get(["run", "total", "speed"]);
+  const s = await chrome.storage.local.get(["run", "total", "opts"]);
   run = s.run || null;
-  speed = s.speed || "normal";
+  opts = { ...DEFAULTS, ...s.opts };
   $("total").textContent = s.total || 0;
+  logos();
+  bindOptions();
   paint();
 })();

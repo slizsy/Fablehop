@@ -42,7 +42,51 @@ body.done .scan i { width: 100%; transform: none; }
 body.error .scan i { width: 100%; transform: none; background: var(--error); }
 @keyframes scan { to { transform: translateX(300%); } }
 
-main { padding: 18px 14px 16px; }
+.views { display: flex; height: 34px; border-bottom: 1px solid var(--border); }
+.views button {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  position: relative;
+  border: 0;
+  border-right: 1px solid var(--border);
+  background: none;
+  color: var(--sub);
+  font: inherit;
+  font-size: 10px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.views button:last-child { border-right: 0; }
+.views span { color: var(--border); }
+.views button:hover { color: var(--text); }
+.views .on { color: var(--text); background: var(--panel); }
+.views .on span { color: var(--accent); }
+.views .on::after { content: ""; position: absolute; left: 0; right: 0; bottom: -1px; height: 2px; background: var(--accent); }
+
+main { padding: 18px 14px 16px; min-height: 400px; }
+section[hidden] { display: none; }
+
+.field { margin-bottom: 18px; }
+.field .label { margin-bottom: 8px; }
+.hint { margin: 7px 0 0; color: var(--sub); font-size: 10px; line-height: 1.6; }
+.input {
+  width: 100%;
+  height: 36px;
+  padding: 0 12px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font: inherit;
+  outline: none;
+  caret-color: var(--accent);
+}
+textarea.input { height: 64px; padding: 8px 12px; resize: none; display: block; }
+.input:focus { border-color: var(--accent); }
+.input::placeholder { color: var(--sub); }
 
 .label {
   display: flex;
@@ -53,7 +97,6 @@ main { padding: 18px 14px 16px; }
   text-transform: uppercase;
   color: var(--sub);
 }
-.label.row { margin: 16px 0 8px; }
 .sq { width: 7px; height: 7px; background: var(--accent); flex: none; }
 body.running .sq { animation: blink 1s steps(2) infinite; }
 body.error .sq { background: var(--error); }

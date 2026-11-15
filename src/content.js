@@ -234,8 +234,9 @@
     location.reload();
   }
 
-  function start(speed) {
-    run = { active: true, state: "running", removed: 0, skipped: 0, pass: 1, speed: speed || "normal", status: "Starting", ts: Date.now() };
+  function start(o) {
+    const opts = Object.assign({ speed: "normal" }, o);
+    run = { active: true, state: "running", removed: 0, skipped: 0, pass: 1, speed: opts.speed, opts, status: "Starting", ts: Date.now() };
     lines.length = 0;
     save();
     render();
@@ -347,7 +348,7 @@
     $(".x").addEventListener("click", () => host.remove());
     ui.act.addEventListener("click", () => {
       if (run.active) stopFlag = true;
-      else start(run.speed);
+      else start(run.opts);
     });
     document.documentElement.appendChild(host);
   }
@@ -382,7 +383,7 @@
 
   chrome.runtime.onMessage.addListener((msg, _sender, reply) => {
     if (msg.type === "fh-start") {
-      if (!run || !run.active) start(msg.speed);
+      if (!run || !run.active) start(msg.opts);
       else render();
       reply({ ok: true });
     } else if (msg.type === "fh-stop") {
@@ -397,6 +398,7 @@
   chrome.storage.local.get("run").then(({ run: saved }) => {
     if (saved && saved.active && Date.now() - saved.ts < RESUME_WINDOW) {
       run = saved;
+      run.opts = run.opts || { speed: run.speed };
       log("pass " + String(run.pass).padStart(2, "0"));
       main();
     } else if (saved && saved.active) {

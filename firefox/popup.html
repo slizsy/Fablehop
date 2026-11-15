@@ -13,7 +13,13 @@
   </header>
   <div class="scan"><i></i></div>
 
-  <main>
+  <nav class="views" id="views">
+    <button data-view="run" class="on"><span>01</span>Run</button>
+    <button data-view="options"><span>02</span>Options</button>
+  </nav>
+
+<main>
+  <section id="v-run">
     <div class="label"><span class="sq"></span><span id="state">Ready</span></div>
     <h1><span id="glyph"></span>Unrepost<em>.</em></h1>
     <p class="sub">Clears every repost off your TikTok profile, one at a time.</p>
@@ -24,13 +30,6 @@
       <div class="stat"><div class="l">Pass</div><div class="v" id="pass">--</div></div>
     </div>
 
-    <div class="label row">Speed</div>
-    <div class="tags" id="speeds" role="radiogroup" aria-label="Speed">
-      <button class="tag" role="radio" data-speed="fast">Fast</button>
-      <button class="tag" role="radio" data-speed="normal">Normal</button>
-      <button class="tag" role="radio" data-speed="slow">Slow</button>
-    </div>
-
     <button class="btn" id="go">Start</button>
     <p class="status" id="status"></p>
 
@@ -39,7 +38,20 @@
       <li><span>02</span>Press start</li>
       <li><span>03</span>Leave the tab open until it says done</li>
     </ol>
-  </main>
+  </section>
+
+  <section id="v-options" hidden>
+    <div class="field">
+      <div class="label">Speed</div>
+      <div class="tags" data-opt="speed">
+        <button class="tag" data-val="fast">Fast</button>
+        <button class="tag" data-val="normal">Normal</button>
+        <button class="tag" data-val="slow">Slow</button>
+      </div>
+      <p class="hint">How long to wait between videos. Use slow if TikTok starts ignoring clicks.</p>
+    </div>
+  </section>
+</main>
 
   <script src="logo.js"></script>
   <script src="popup.js"></script>
