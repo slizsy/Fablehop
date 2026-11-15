@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Fablehop Unrepost</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <header class="bar">
+    <span id="logo"></span><span class="brand">FABLEHOP<sup>°</sup></span>
+    <span class="where">TOOLS / UNREPOST</span>
+  </header>
+  <div class="scan"><i></i></div>
+
+  <main>
+    <div class="label"><span class="sq"></span><span id="state">Ready</span></div>
+    <h1><span id="glyph"></span>Unrepost<em>.</em></h1>
+    <p class="sub">Clears every repost off your TikTok profile, one at a time.</p>
+
+    <div class="stats">
+      <div class="stat"><div class="l">This run</div><div class="v" id="removed">0</div></div>
+      <div class="stat"><div class="l">All time</div><div class="v" id="total">0</div></div>
+      <div class="stat"><div class="l">Pass</div><div class="v" id="pass">--</div></div>
+    </div>
+
+    <div class="label row">Speed</div>
+    <div class="tags" id="speeds" role="radiogroup" aria-label="Speed">
+      <button class="tag" role="radio" data-speed="fast">Fast</button>
+      <button class="tag" role="radio" data-speed="normal">Normal</button>
+      <button class="tag" role="radio" data-speed="slow">Slow</button>
+    </div>
+
+    <button class="btn" id="go">Start</button>
+    <p class="status" id="status"></p>
+
+    <ol class="steps">
+      <li><span>01</span>Log in on tiktok.com</li>
+      <li><span>02</span>Press start</li>
+      <li><span>03</span>Leave the tab open until it says done</li>
+    </ol>
+  </main>
+
+  <script src="logo.js"></script>
+  <script src="popup.js"></script>
+</body>
+</html>
