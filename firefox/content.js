@@ -515,6 +515,12 @@
       if (run && run.active) stopFlag = true;
       else chrome.storage.local.get("opts").then(({ opts }) => start(opts));
       reply({ ok: true });
+    } else if (msg.type === "fh-check") {
+      const path = navProfilePath();
+      const mine = onOwnProfile() || !!(path && samePath(location.pathname, path));
+      const tabs = {};
+      for (const t in TARGETS) tabs[t] = !!findTab(TARGETS[t]);
+      reply({ loggedIn: !!path || mine, mine, tabs });
     } else if (msg.type === "fh-ping") {
       reply({ ok: true, active: !!(run && run.active) });
     }

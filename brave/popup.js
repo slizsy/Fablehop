@@ -93,6 +93,23 @@ go.addEventListener("click", async () => {
   }
 });
 
+// Reports what the extension can see on the page, for when a run gets stuck.
+$("check").addEventListener("click", async () => {
+  const out = $("check-out");
+  out.hidden = false;
+  out.replaceChildren();
+  const line = (ok, text) => out.appendChild(Object.assign(document.createElement("div"), { className: ok ? "ok" : "no", textContent: text }));
+  if (!onTikTok) return line(false, "This tab is not TikTok");
+  try {
+    const r = await send({ type: "fh-check" });
+    line(r.loggedIn, r.loggedIn ? "Logged in" : "Not logged in, or TikTok is still loading");
+    line(r.mine, r.mine ? "On your profile" : "Not on your profile yet (start opens it)");
+    if (r.mine) for (const t in r.tabs) line(r.tabs[t], (r.tabs[t] ? "Found the " : "Can't see the ") + t + " tab");
+  } catch {
+    line(false, "Couldn't reach the page. Reload TikTok.");
+  }
+});
+
 $("views").addEventListener("click", (e) => {
   const b = e.target.closest("button");
   if (!b) return;
