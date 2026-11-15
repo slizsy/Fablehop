@@ -35,7 +35,7 @@ Download the zip for your browser from the [latest release](https://github.com/s
 
 1. Go to `brave://extensions` (or `chrome://extensions`)
 2. Turn on **Developer mode** (top right)
-3. Click **Load unpacked** and pick the unzipped `brave` folder
+3. Click **Load unpacked** and pick the unzipped `chromium` folder
 
 **Firefox** (127 or newer)
 
@@ -55,7 +55,7 @@ Clearing can't be undone in bulk. If you're unsure, run **Count only** first, or
 
 ## How it's laid out
 
-- `brave/`: the extension for Brave, Chrome and Edge
+- `chromium/`: the extension for Brave, Chrome, Edge and other Chromium browsers
 - `firefox/`: the same extension for Firefox
 
 Each folder is the whole extension, ready to load as it is. Plain HTML/CSS/JS, nothing to build. The two only differ in `manifest.json`, so a change to any other file should be made in both.
