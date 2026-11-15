@@ -70,7 +70,7 @@ body.error .scan i { width: 100%; transform: none; background: var(--error); }
 main { padding: 18px 14px 16px; min-height: 400px; }
 section[hidden] { display: none; }
 
-.field { margin-bottom: 18px; }
+.field { margin-bottom: 14px; }
 .field .label { margin-bottom: 8px; }
 .hint { margin: 7px 0 0; color: var(--sub); font-size: 10px; line-height: 1.6; }
 .input {
@@ -84,7 +84,7 @@ section[hidden] { display: none; }
   outline: none;
   caret-color: var(--accent);
 }
-textarea.input { height: 64px; padding: 8px 12px; resize: none; display: block; }
+textarea.input { height: 46px; padding: 8px 12px; resize: none; display: block; }
 .input:focus { border-color: var(--accent); }
 .input::placeholder { color: var(--sub); }
 
