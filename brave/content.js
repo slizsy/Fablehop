@@ -234,6 +234,7 @@
     await pause(1200);
 
     const delay = SPEEDS[run.speed] || SPEEDS.normal;
+    const dry = run.opts.mode === "count"; // count only: walk the videos but click nothing
     const seen = new Set();
     let passRemoved = 0;
     let passSkipped = 0;
@@ -247,13 +248,13 @@
       const btn = await waitFor(() => findBtn(T), 6000);
       // aria-pressed="false" would mean it is already off, and a click would turn it back on
       if (btn && btn.getAttribute("aria-pressed") !== "false") {
-        btn.click();
+        if (!dry) btn.click();
         run.removed++;
         run.counts[run.target] = (run.counts[run.target] || 0) + 1;
         run.empty = 0;
         passRemoved++;
-        bumpTotal();
-        log(T.verb + "  " + String(id).slice(-10));
+        if (!dry) bumpTotal();
+        log((dry ? "found" : T.verb) + "  " + String(id).slice(-10));
       } else {
         run.skipped++;
         passSkipped++;
@@ -279,6 +280,7 @@
     const close = findClose();
     if (close) close.click();
 
+    if (dry) return nextTarget();
     if (passRemoved === 0) return emptyPass(passSkipped > 0);
     if (run.pass >= MAX_PASSES) return finish("done", "Stopped after " + MAX_PASSES + " passes. Press start to keep going.");
 
@@ -323,6 +325,7 @@
       return work();
     }
     const parts = run.targets.filter((t) => run.counts[t]).map((t) => run.counts[t] + " " + TARGETS[t].label);
+    if (parts.length && run.opts.mode === "count") return finish("done", "Counted " + parts.join(", ") + ". Nothing was changed.");
     if (parts.length) return finish("done", "All clear. Cleared " + parts.join(", ") + ".");
     if (run.stuck) return finish("error", "Found videos but not the button to clear them. TikTok may have changed its layout.");
     return finish("done", "Nothing found to clear.");
@@ -456,7 +459,7 @@
     mount();
     const state = run.active ? "running" : run.state || "stopped";
     ui.p.className = "p " + state;
-    ui.state.textContent = LABELS[state];
+    ui.state.textContent = run.opts.mode === "count" ? LABELS[state].replace(/cleared/i, (w) => (w === "Cleared" ? "Counted" : "counted")) : LABELS[state];
     const n = String(run.removed);
     const pad = "0".repeat(Math.max(0, 4 - n.length));
     ui.num.innerHTML = (run.removed ? `<span class="z">${pad}</span>${n}` : `<span class="z">0000</span>`);

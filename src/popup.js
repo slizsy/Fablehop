@@ -1,7 +1,7 @@
 const $ = (id) => document.getElementById(id);
 const go = $("go");
 
-const DEFAULTS = { speed: "normal", targets: ["reposts"], limit: 0 };
+const DEFAULTS = { speed: "normal", targets: ["reposts"], limit: 0, mode: "remove" };
 let opts = { ...DEFAULTS };
 let tab = null;
 let onTikTok = false;
@@ -30,7 +30,7 @@ function paint() {
   });
   $("what").textContent = opts.targets.join(", ").replace(/, ([^,]*)$/, " and $1");
 
-  go.textContent = !onTikTok ? "Open TikTok ↗" : active ? "Stop" : "Start";
+  go.textContent = !onTikTok ? "Open TikTok ↗" : active ? "Stop" : opts.mode === "count" ? "Start counting" : "Start";
   go.classList.toggle("ghost", active);
 }
 
