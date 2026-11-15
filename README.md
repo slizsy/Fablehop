@@ -55,10 +55,11 @@ Clearing can't be undone in bulk. If you're unsure, run **Count only** first, or
 
 ## How it's laid out
 
-- `src/`: the extension itself (plain HTML/CSS/JS, no build tools)
-- `manifest.brave.json`, `manifest.firefox.json`: one manifest per browser
-- `build.sh`: copies `src/` into `brave/` and `firefox/` with the right manifest. Run it after changing anything in `src/`.
+- `brave/`: the extension for Brave, Chrome and Edge
+- `firefox/`: the same extension for Firefox
 
-It finds TikTok's buttons by their names in the page. If TikTok changes its layout and something stops working, the names to update are in the `TARGETS` list near the top of `src/content.js`.
+Each folder is the whole extension, ready to load as it is. Plain HTML/CSS/JS, nothing to build. The two only differ in `manifest.json`, so a change to any other file should be made in both.
+
+It finds TikTok's buttons by their names in the page. If TikTok changes its layout and something stops working, the names to update are in the `TARGETS` list near the top of `content.js`.
 
 It only runs on tiktok.com, and nothing leaves your browser.
