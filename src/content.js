@@ -426,7 +426,7 @@
     .log div:last-child { color: var(--text); }
     .btn {
       display: block; width: 100%; height: 38px; margin-top: 12px; cursor: pointer;
-      background: var(--accent); color: #fff; border: 1px solid var(--accent);
+      background: var(--accent); color: var(--on-accent, #fff); border: 1px solid var(--accent);
       font: inherit; font-size: 11px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase;
     }
     .btn:hover { background: var(--text); border-color: var(--text); color: var(--bg); }
@@ -445,7 +445,7 @@
       <style>${CSS}</style>
       <div class="p" role="status" aria-live="polite">
         <div class="bar">
-          ${fhLogo.svg("fablehop", 18)}<span>FABLEHOP<sup>°</sup></span>
+          ${fhLogo.svg("fablehop", 18, { "#": run.opts.accent || "#4d5cff" })}<span>FABLEHOP<sup>°</sup></span>
           <span class="where">UNREPOST</span>
           <button class="x" title="Hide panel" aria-label="Hide panel">×</button>
         </div>
@@ -480,6 +480,8 @@
     mount();
     const state = run.active ? "running" : run.state || "stopped";
     ui.p.className = "p " + state;
+    ui.p.style.setProperty("--accent", run.opts.accent || "#4d5cff");
+    ui.p.style.setProperty("--on-accent", fhLogo.onColor(run.opts.accent || "#4d5cff"));
     ui.state.textContent = run.opts.mode === "count" ? LABELS[state].replace(/cleared/i, (w) => (w === "Cleared" ? "Counted" : "counted")) : LABELS[state];
     const n = String(run.removed);
     const pad = "0".repeat(Math.max(0, 4 - n.length));

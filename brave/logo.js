@@ -45,5 +45,12 @@ var fhLogo = (function () {
     return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${w} ${h}" width="${width}" height="${height}" shape-rendering="crispEdges" aria-hidden="true">${rects}</svg>`;
   }
 
-  return { svg };
+  // Text color that stays readable on top of an accent color.
+  function onColor(hex) {
+    const n = parseInt(hex.slice(1), 16);
+    const light = (0.299 * (n >> 16) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255)) / 255;
+    return light > 0.6 ? "#05050b" : "#ffffff";
+  }
+
+  return { svg, onColor };
 })();

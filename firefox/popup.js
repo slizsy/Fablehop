@@ -1,7 +1,7 @@
 const $ = (id) => document.getElementById(id);
 const go = $("go");
 
-const DEFAULTS = { speed: "normal", targets: ["reposts"], limit: 0, mode: "remove", keep: "" };
+const DEFAULTS = { speed: "normal", targets: ["reposts"], limit: 0, mode: "remove", keep: "", accent: "#4d5cff" };
 let opts = { ...DEFAULTS };
 let tab = null;
 let onTikTok = false;
@@ -11,8 +11,11 @@ const STATES = { running: "Running", done: "Done", stopped: "Stopped", error: "S
 const saveOpts = () => chrome.storage.local.set({ opts });
 
 function logos() {
-  $("logo").innerHTML = fhLogo.svg("fablehop", 20);
-  $("glyph").innerHTML = fhLogo.svg("unrepost", 30);
+  const root = document.documentElement.style;
+  root.setProperty("--accent", opts.accent);
+  root.setProperty("--on-accent", fhLogo.onColor(opts.accent));
+  $("logo").innerHTML = fhLogo.svg("fablehop", 20, { "#": opts.accent });
+  $("glyph").innerHTML = fhLogo.svg("unrepost", 30, { "#": opts.accent });
 }
 
 function paint() {
@@ -49,6 +52,7 @@ function bindOptions() {
           opts[key] = next;
         } else opts[key] = t.dataset.val;
         saveOpts();
+        logos();
         paint();
       });
     } else {

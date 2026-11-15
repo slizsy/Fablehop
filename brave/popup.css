@@ -18,7 +18,7 @@ html, body {
   font: 12px/1.5 "Roboto Mono", ui-monospace, Menlo, Consolas, monospace;
   -webkit-font-smoothing: antialiased;
 }
-::selection { background: var(--accent); color: #fff; }
+::selection { background: var(--accent); color: var(--on-accent, #fff); }
 
 .bar {
   display: flex;
@@ -137,6 +137,7 @@ h1 em { color: var(--accent); font-style: normal; margin-left: -10px; }
   cursor: pointer;
 }
 .tag:first-child { margin-left: 0; }
+.tag i { display: inline-block; width: 7px; height: 7px; margin-right: 7px; }
 .tag:hover { color: var(--text); }
 .tag.on { background: var(--text); color: var(--bg); border-color: var(--text); position: relative; }
 
@@ -146,7 +147,7 @@ h1 em { color: var(--accent); font-style: normal; margin-left: -10px; }
   height: 42px;
   margin-top: 14px;
   background: var(--accent);
-  color: #fff;
+  color: var(--on-accent, #fff);
   border: 1px solid var(--accent);
   font: inherit;
   font-size: 11px;
